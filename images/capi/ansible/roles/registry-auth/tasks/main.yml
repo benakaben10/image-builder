@@ -11,7 +11,8 @@
     content: |
       {
         "auths": {
-      {% for registry, token in registry_auth_map.items() %}
+      {% set auth_map = registry_auth_map | default('{}') | from_yaml %}
+      {% for registry, token in auth_map.items() %}
           "{{ registry }}": {
             "auth": "{{ token }}"
           }{% if not loop.last %},{% endif %}
