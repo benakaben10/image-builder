@@ -1,0 +1,20 @@
+- name: Create kubelet directory
+  file:
+    path: /var/lib/kubelet
+    state: directory
+    mode: "0755"
+
+- name: Write docker auth config
+  copy:
+    dest: /var/lib/kubelet/config.json
+    mode: "0600"
+    content: |
+      {
+        "auths": {
+      {% for registry, token in registry_auth_map.items() %}
+          "{{ registry }}": {
+            "auth": "{{ token }}"
+          }{% if not loop.last %},{% endif %}
+      {% endfor %}
+        }
+      }

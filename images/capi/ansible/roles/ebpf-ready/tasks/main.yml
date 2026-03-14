@@ -1,0 +1,61 @@
+---
+# ---------------------------------------------------
+# Install eBPF tools
+# ---------------------------------------------------
+
+- name: Install eBPF packages
+  ansible.builtin.package:
+    name: "{{ ebpf_packages }}"
+    state: present
+  when: ebpf_install_tools
+
+# ---------------------------------------------------
+# Mount BPF filesystem
+# ---------------------------------------------------
+
+- name: Ensure BPF filesystem mount point exists
+  ansible.builtin.file:
+    path: /sys/fs/bpf
+    state: directory
+    mode: "0755"
+
+- name: Mount BPF filesystem
+  ansible.builtin.mount:
+    path: /sys/fs/bpf
+    src: bpf
+    fstype: bpf
+    state: mounted
+
+# ---------------------------------------------------
+# Load kernel modules
+# ---------------------------------------------------
+
+- name: Load BPF kernel modules
+  ansible.builtin.modprobe:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ ebpf_modules }}"
+  ignore_errors: true
+
+- name: Persist kernel modules
+  ansible.builtin.copy:
+    dest: /etc/modules-load.d/ebpf.conf
+    mode: "0644"
+    content: |
+      {% for m in ebpf_modules %}
+      {{ m }}
+      {% endfor %}
+
+# ---------------------------------------------------
+# Apply sysctl settings
+# ---------------------------------------------------
+
+- name: Configure BPF sysctl
+  ansible.builtin.copy:
+    dest: /etc/sysctl.d/99-ebpf.conf
+    mode: "0644"
+    content: |
+      {% for key, value in ebpf_sysctl.items() %}
+      {{ key }}={{ value }}
+      {% endfor %}
+  notify: reload sysctl

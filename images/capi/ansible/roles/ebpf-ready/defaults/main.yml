@@ -1,0 +1,17 @@
+---
+ebpf_install_tools: true
+
+ebpf_packages:
+  - bpftool
+  - bpfcc-tools
+
+ebpf_sysctl:
+  net.core.bpf_jit_enable: 1
+  net.core.bpf_jit_harden: 1
+  kernel.unprivileged_bpf_disabled: 0
+  net.ipv4.ip_forward: 1
+
+ebpf_modules:
+  - bpf
+  - cls_bpf
+  - act_bpf
